@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Carte Interactive avec OpenStreetMap + Firebase</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+  html, body { height: 100%; margin: 0; padding: 0; }
+  #map { height: 100vh; width: 100%; }
+  .text-label { font-size: 14px; }
+  .red-blink { animation: blink 1s infinite; }
+  @keyframes blink { 0% {opacity:1;} 50% {opacity:0;} 100% {opacity:1;} }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="last-change-time" style="position:absolute; bottom:10px; left:10px; background:rgba(128,128,128,0.9); color:white; padding:8px 15px; border-radius:5px; font-weight:bold; font-family:Arial, sans-serif; user-select:none; white-space:nowrap; z-index:1000;">
+  <span id="last-update-text">Last update:</span>
+  <span id="last-change-hour">never</span>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  // Config Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyDHagkSUwNm6wDoyWuH633Yo7HXWxnsqQg",
+    authDomain: "notamops.firebaseapp.com",
+    databaseURL: "https://notamops-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "notamops",
+    storageBucket: "notamops.firebasedestorage.app",
+    messagingSenderId: "1022666701705",
+    appId: "1:1022666701705:web:f11a044ae64ceb5f77bf58"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  const initialCoordinates = [43.63004663207765, 1.362437596144907];
+  const map = L.map('map').setView(initialCoordinates, 14);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  var closedRunways = [
+    {
+      name: "piste14R32L",
+      coordinates: [
+        [43.61898359038304, 1.3721193538892322],
+        [43.64408997812653, 1.3459506079869354]
+      ]
+    },
+    {
+      name: "piste14L32R",
+      coordinates: [
+        [43.63735263661366, 1.3576429417655254],
+        [43.61563295943991, 1.3802469891775873]
+      ]
+    },
+
+{
+                name: "Y30",
+                coordinates: [
+                    [43.62378452203063, 1.3546702378527364],  
+                    [43.623618015862384, 1.3481632195087894]
+                ]
+            },
+{
+        name: "Y35",
+        coordinates: [
+            [43.626824682264264, 1.3545036650778493],  // Point de départ du taxiway
+            [43.62379112515318, 1.3546831485962156]    // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "Y40",
+        coordinates: [
+            [43.626834285623914, 1.3545077019217449],  // Point de départ du taxiway
+            [43.62659828466671, 1.3478484142567375]    // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "Y50",
+        coordinates: [
+            [43.625760688271, 1.3601636698257094],  // Point de départ du taxiway
+            [43.627260160260604, 1.3585351732149826],   // Point intermédiaire
+            [43.627457039458015, 1.3577721520852342],   // Point intermédiaire
+            [43.62868708426621, 1.3564025652269256],   // Point intermédiaire
+            [43.629734170559814, 1.3563399830492442],   // Point d'arrivée du taxiway
+
+        ]
+    },
+    {
+        name: "Y60",
+        coordinates: [
+            [43.63087803366133, 1.3547061408571457],  // Point de départ du taxiway
+            [43.629907334261034, 1.3549046243119198]   // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "S20",
+        coordinates: [
+            [43.61652186184592, 1.3673680319079708],  // Point de départ du taxiway
+            [43.61754521806315, 1.3692322337979619]    // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "S30",
+        coordinates: [
+            [43.61695085453142, 1.3662799831830539],  // Point de départ du taxiway
+            [43.61770021286529, 1.3665733114097987],    // Point INT du taxiway
+            [43.61862774444903, 1.36828945012442]    // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "S32",
+        coordinates: [
+            [43.62110610919193, 1.3659680588217689],  // Point de départ du taxiway
+            [43.617713622168, 1.3657972948797865],    // Point d'arrivée du taxiway
+            [43.61672877318869, 1.366275957448126]    // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "S35",
+        coordinates: [
+            [43.62354697508553, 1.3561179885178611],  // Point de départ du taxiway
+            [43.62243239611833, 1.3571210884034457]    // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "S40",
+        coordinates: [
+            [43.62239660611924, 1.3571705288176659],  // Point de départ du taxiway
+            [43.62179279111381, 1.3585660234010202]    // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "S50",
+        coordinates: [
+            [43.6259643627343, 1.3606128218016544],   // Point de départ du taxiway
+            [43.623549502410796, 1.3561141637147804]   // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "S60",
+        coordinates: [
+            [43.62974747916827, 1.356562490735038],    // Point de départ du taxiway
+            [43.629531233138614, 1.3518421738637585]    // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "S90",
+        coordinates: [
+            [43.63640724447344, 1.3496035697811333],   // Point de départ du taxiway
+            [43.635202732087144, 1.3474020334098078]   // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "S2",
+        coordinates: [
+            [43.61827779482427, 1.3705419798702372],   // Point de départ du taxiway
+            [43.618755473288665, 1.3714432020597913]   // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "S3",
+        coordinates: [
+            [43.619347892257416, 1.3695863005355222],  // Point de départ du taxiway
+            [43.61970905770134, 1.370240759506508]     // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "S4",
+        coordinates: [
+            [43.62528347103804, 1.3632496105496947],   // Point de départ du taxiway
+            [43.625780509326155, 1.3641454683340755]   // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "S6",
+        coordinates: [
+            [43.63024150318858, 1.3580911098935016],    // Point de départ du taxiway
+            [43.63070258480463, 1.3589306413145166]     // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "S8",
+        coordinates: [
+            [43.634838139720856, 1.3532468865455296],   // Point de départ du taxiway
+            [43.63530908300172, 1.354088967853356]       // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "S10",
+        coordinates: [
+            [43.63969241348405, 1.3481848907852187],    // Point de départ du taxiway
+            [43.640134377411975, 1.3489852594034055]     // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "S11",
+        coordinates: [
+            [43.64319312510268, 1.344645626301745],      // Point de départ du taxiway
+            [43.64385251718104, 1.3458477864001188]       // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "W100",
+        coordinates: [
+            [43.64261066459764, 1.3444923677590739],     // Point de départ du taxiway
+            [43.63988349187813, 1.347230903166333]         // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "W90",
+        coordinates: [
+            [43.6390992854909, 1.3480355658617607],      // Point de départ du taxiway
+            [43.637292077839945, 1.3499238410122378]       // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "W80",
+        coordinates: [
+            [43.63649619043774, 1.350747279143765],       // Point de départ du taxiway
+            [43.63489582173709, 1.352425709449863]         // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "W60",
+        coordinates: [
+            [43.63413872814694, 1.3532089144907835],      // Point de départ du taxiway
+            [43.63066179896908, 1.356821850033609]         // Point d'arrivée du taxiway
+        ]
+    },
+{
+        name: "W50",
+        coordinates: [
+            [43.62945035930876, 1.3580851704748094], // Point de départ du taxiway
+            [43.62679830840899, 1.3608344347175398]  // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "W40",
+        coordinates: [
+            [43.62590326335725, 1.3617732078733389], // Point de départ du taxiway
+            [43.62545476505181, 1.3622506410824518]  // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "W35",
+        coordinates: [
+            [43.624509218705406, 1.3632135541084665], // Point de départ du taxiway
+            [43.62220839185697, 1.3656114489697764]   // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "W30",
+        coordinates: [
+            [43.62126473614792, 1.366611912913664],   // Point de départ du taxiway
+            [43.61951330295347, 1.368435815048839]     // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "W20",
+        coordinates: [
+            [43.61873514124011, 1.369247244127089],    // Point de départ du taxiway
+            [43.61815385027207, 1.3698742619645148]    // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "Z1",
+        coordinates: [
+            [43.613057807967586, 1.3645644427706318],   // Point de départ du taxiway
+            [43.61443321373804, 1.3652877185111498],     // Point int
+            [43.61559202119503, 1.3663748643871596]     // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "Z2",
+        coordinates: [
+            [43.62130917698069, 1.3626681997393437],   // Point de départ du taxiway
+            [43.61751990558763, 1.3623902101564453]     // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "Z3",
+        coordinates: [
+            [43.612968322153485, 1.358918689138001],   // Point de départ du taxiway
+            [43.61662342118049, 1.3591634940278927],     // Point d'arrivée du taxiway
+            [43.617039747283314, 1.359311300742887],      // Point d'arrivée du taxiway
+            [43.617586484409046, 1.3593436334627074],      // Point d'arrivée du taxiway
+            [43.61790248617609, 1.359258182740188],      // Point d'arrivée du taxiway
+            [43.62127124869831, 1.35934630289972]      // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "Z4",
+        coordinates: [
+            [43.61703904592338, 1.3593112032853383],    // Point de départ du taxiway
+            [43.61692096081864, 1.362525954117816]       // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "Z5",
+        coordinates: [
+            [43.620160118143794, 1.3592529179472512],   // Point de départ du taxiway
+            [43.62037298650965, 1.353420613711583]       // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "Z6",
+        coordinates: [
+            [43.62014495379552, 1.3544231256472425],    // Point de départ du taxiway
+            [43.61702467455007, 1.3541937239074935]      // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "Z7",
+        coordinates: [
+            [43.61576816829233, 1.359114108865924],      // Point de départ du taxiway
+            [43.61564194121496, 1.362567481883432]       // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "Z8",
+        coordinates: [
+            [43.61283000671673, 1.3632498131455486],     // Point de départ du taxiway
+            [43.61305408364741, 1.3645599943759028]     // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "Z9",
+        coordinates: [
+            [43.61307833505153, 1.3578188338655943],      // Point de départ du taxiway
+            [43.610060337056325, 1.3576124137576642]      // Point d'arrivée du taxiway
+        ]
+    },
+    {
+        name: "M2",
+        coordinates: [
+            [43.61933116794572, 1.3725472683823705], // Point de départ de M2
+            [43.62043919205941, 1.374553879795225]  // Point d'arrivée de M2
+        ]
+    },
+    {
+        name: "M4",
+        coordinates: [
+            [43.624520866438765, 1.3678218307475511], // Point de départ de M4
+            [43.624706736692104, 1.3698265584450584]  // Point d'arrivée de M4
+        ]
+    },
+    {
+        name: "M10",
+        coordinates: [
+            [43.64100946369648, 1.350593845497481], // Point de départ de M10
+            [43.64293278840719, 1.3541071120702421]  // Point d'arrivée de M10
+        ]
+    },
+    {
+        name: "M8",
+        coordinates: [
+            [43.63612994163921, 1.3556345877264655], // Point de départ de M8
+            [43.637099555330074, 1.3574321892244088] // Point d'arrivée de M8
+        ]
+    },
+    {
+        name: "M11",
+        coordinates: [
+            [43.64416941384274, 1.346419253623213], // Point de départ de M11
+            [43.645344274130984, 1.3485627333224433] // Point d'arrivée de M11
+        ]
+    },
+    {
+        name: "N1",
+        coordinates: [
+            [43.616032913826, 1.3806717445618242], // Point de départ de N1
+            [43.616577938346744, 1.3816355217105072],  // Point d'arrivée de N1
+            [43.617018146865824, 1.3817968406716556],  // Point d'arrivée de N1
+            [43.61789855423196, 1.3810192007361217]  // Point d'arrivée de N1
+        ]
+    },
+    {
+        name: "N2",
+        coordinates: [
+            [43.62094970509704, 1.3754779009947702], // Point de départ de N2
+            [43.62153803846961, 1.376556148971558]   // Point d'arrivée de N2
+        ]
+    },
+    {
+        name: "N6",
+        coordinates: [
+            [43.62989745401233, 1.3660231916086387], // Point de départ de N6
+            [43.630643409763564, 1.3671367925999591]   // Point d'arrivée de N6
+        ]
+    },
+    {
+        name: "N4",
+        coordinates: [
+            [43.62492145234849, 1.3720433024364498], // Point de départ de N4
+            [43.62523310011739, 1.3726985805349892]   // Point d'arrivée de N4
+        ]
+    },
+    {
+        name: "N8",
+        coordinates: [
+            [43.63743863920562, 1.3580229174114833], // Point de départ de N8
+            [43.63816579800375, 1.3593466437019794]   // Point d'arrivée de N8
+        ]
+    },
+    {
+        name: "P10",
+        coordinates: [
+            [43.621416557021895, 1.3773139192417985], // Point de départ de P10
+            [43.618984535061415, 1.3798647021741213]   // Point d'arrivée de P10
+        ]
+    },
+    {
+        name: "P20",
+        coordinates: [
+            [43.62511137735926, 1.3734841482968476], // Point de départ de P20
+            [43.62216435604339, 1.3765673620069183]   // Point d'arrivée de P20
+        ]
+    },
+    {
+        name: "P40",
+        coordinates: [
+            [43.62583085567395, 1.372741955451901], // Point de départ de P40
+            [43.62815273309267, 1.3703254192412313]   // Point d'arrivée de P40
+        ]
+    },
+    {
+        name: "P50",
+        coordinates: [
+            [43.62823272927009, 1.3702487336064384], // Point de départ de P50
+            [43.629267772267035, 1.369175134673525]   // Point d'arrivée de P50
+        ]
+    },
+    {
+        name: "P55",
+        coordinates: [
+            [43.629344501880595, 1.3690894271824623], // Point de départ de P55
+            [43.630488904182954, 1.3678917779592559]   // Point d'arrivée de P55
+        ]
+    },
+    {
+        name: "P60",
+        coordinates: [
+            [43.63117782059983, 1.367188074459689], // Point de départ de P60
+            [43.63229443612774, 1.366019746192771]   // Point d'arrivée de P60
+        ]
+    },
+    {
+        name: "P65",
+        coordinates: [
+            [43.632583381505825, 1.3657333027808665], // Point de départ de P65
+            [43.63342409037212, 1.3648401406504114]   // Point d'arrivée de P65
+        ]
+    },
+    {
+        name: "P70",
+        coordinates: [
+            [43.6334714309091, 1.364788265073934], // Point de départ de P70
+            [43.6383480433151, 1.3597285546655393]   // Point d'arrivée de P70
+        ]
+    },
+    {
+        name: "P90",
+        coordinates: [
+            [43.638463936459175, 1.3595954824916274], // Point de départ de P90
+            [43.642827085832785, 1.3550651030095733]   // Point d'arrivée de P90
+        ]
+    },
+    {
+        name: "P100",
+        coordinates: [
+            [43.64434055337633, 1.3535174455831966], // Point de départ de P100
+            [43.64363112635676, 1.3542266392492004]   // Point d'arrivée de P100
+        ]
+    },
+    {
+        name: "P101",
+        coordinates: [
+            [43.645477205090856, 1.3490992681171556], // Point de départ de P101
+            [43.644632034056414, 1.3525870601661905]   // Point d'arrivée de P101
+        ]
+    },
+    {
+        name: "T10",
+        coordinates: [
+            [43.61840931937629, 1.38086863736494], // Point de départ de T10
+            [43.61876615607149, 1.3812058872375501]   // Point d'arrivée de T10
+        ]
+    },
+	{
+        name: "T11",
+        coordinates: [
+            [43.618876895295905, 1.3814117721426498], // Point de départ de T11
+            [43.619107097159855, 1.3819907590468898],  // Point d'arrivée de T11
+            [43.61909911329493, 1.3826083450780797],  // Point d'arrivée de T11
+            [43.61826479355805, 1.3851301548551702]  // Point d'arrivée de T11
+        ]
+    },
+    {
+        name: "T12",
+        coordinates: [
+            [43.618933964323936, 1.3812302009873465], // Point de départ de T12
+            [43.61945300392609, 1.381015361573149],   // Point d'arrivée de T12
+            [43.61975321294992, 1.380605667781859],   // Point d'arrivée de T12
+            [43.62013118481757, 1.3804183078276173],   // Point d'arrivée de T12
+            [43.62037532807876, 1.3805532070225]   // Point d'arrivée de T12
+        ]
+    },
+    {
+        name: "T50",
+        coordinates: [
+            [43.62842089897306, 1.3708293026713056], // Point de départ de T50
+            [43.628985125877186, 1.3718591608695885]  // Point d'arrivée de T50
+        ]
+    },
+    {
+        name: "T55",
+        coordinates: [
+            [43.62958098309592, 1.3696860509265443], // Point de départ de T55
+            [43.63022132578726, 1.3709272497184672]   // Point d'arrivée de T55
+        ]
+    },
+    {
+        name: "T60",
+        coordinates: [
+            [43.63099522184847, 1.3678922805204436], // Point de départ de T60
+            [43.63124225246825, 1.3683372439361645]   // Point d'arrivée de T60
+        ]
+    },
+    {
+        name: "T65",
+        coordinates: [
+            [43.63246353849134, 1.3662288509079714], // Point de départ de T65
+            [43.6327763591725, 1.3668651964379812]    // Point d'arrivée de T65
+        ]
+    },
+    {
+        name: "T70",
+        coordinates: [
+            [43.63360765221937, 1.3650959475540594], // Point de départ de T70
+            [43.63489935170886, 1.3674951568525748]   // Point d'arrivée de T70
+        ]
+    },
+    {
+        name: "T100",
+        coordinates: [
+            [43.64688207811427, 1.3586244441967834], // Point de départ de T100
+            [43.64531017085167, 1.3584242562989597]   // Point d'arrivée de T100
+        ]
+    },
+    {
+        name: "T101",
+        coordinates: [
+            [43.645312572033156, 1.3536146445032784], // Point de départ de T101
+            [43.64815887215758, 1.3542297742635472]    // Point d'arrivée de T101
+        ]
+    },
+    {
+        name: "J1",
+        coordinates: [
+            [43.647127906816436, 1.3585866325494538], // Point de départ de J1
+            [43.64686011622989, 1.3548700358691304],    // Point d'arrivée de J1
+            [43.64696110719459, 1.3539730191686083]    // Point d'arrivée de J1
+        ]
+    },
+    {
+        name: "J2",
+        coordinates: [
+            [43.6473471110395, 1.3591265860195396], // Point de départ de J2
+            [43.64765907312929, 1.363545650976355]    // Point d'arrivée de J2
+        ]
+    },
+    {
+        name: "J3",
+        coordinates: [
+            [43.653861544267365, 1.3535939746468888], // Point de départ de J3
+            [43.654150021524266, 1.3575428257262374]   // Point d'arrivée de J3
+        ]
+    },
+    {
+        name: "J4",
+        coordinates: [
+            [43.648353690818674, 1.351140026477402], // Point de départ de J4
+            [43.648913995663776, 1.351296144258457],    // Point d'arrivée de J4
+            [43.65018595865002, 1.3529947058243093]    // Point d'arrivée de J4
+        ]
+    },
+    {
+        name: "J5",
+        coordinates: [
+            [43.65351641913181, 1.3493066582342097], // Point de départ de J5
+            [43.65381527875852, 1.3530885728731195]    // Point d'arrivée de J5
+        ]
+    },
+    {
+        name: "L1",
+        coordinates: [
+            [43.65381998787507, 1.3530965941510726], // Point de départ de L1
+            [43.65295425738617, 1.353568258791177],   // Point d'arrivée de L1
+            [43.64816916498673, 1.3542261069128867]   // Point d'arrivée de L1
+        ]
+    },
+    {
+        name: "L2",
+        coordinates: [
+            [43.65398266986204, 1.3579133314626581], // Point de départ de L2
+            [43.65326345565256, 1.3577521400414903],   // Point d'arrivée de L2
+            [43.64713252580848, 1.3585941270891326]   // Point d'arrivée de L2
+        ]
+    },
+            {
+                name: "ILS 32L",
+                coordinates: [
+                    [43.616920448155085, 1.3742222026851394],
+                    [43.616920448155085, 1.3742222026851394]
+                ]
+            },
+            {
+                name: "ILS 32R",
+                coordinates: [
+                    [43.61419359821287, 1.3818321321038483],
+                    [43.61419359821287, 1.3818321321038483]
+                ]
+            },
+            {
+                name: "ILS 14L",
+                coordinates: [
+                    [43.63862781095643, 1.3563060884208127],
+                    [43.63862781095643, 1.3563060884208127]           
+                ]
+            },
+            {
+                name: "ILS 14R",
+                coordinates: [
+                    [43.64657219657224, 1.3433846551868465],
+                    [43.64657219657224, 1.3433846551868465]
+                ]
+            }
+  ];
+
+  let polylines = [];
+  let crosses = [];
+  let lastChangeTimestamp = null;
+  let closedRunwaysData = {};
+
+  function sanitizeKey(str) {
+    return str.toLowerCase().replace(/[^a-z0-9_]/g, '');
+  }
+
+  function updateLastChangeTime() {
+    if (!lastChangeTimestamp) return;
+
+    var now = new Date();
+
+    // Date de la dernière mise à jour (jour uniquement)
+    var lastDate = new Date(lastChangeTimestamp.getFullYear(), lastChangeTimestamp.getMonth(), lastChangeTimestamp.getDate());
+    // Date d'aujourd'hui (jour uniquement)
+    var todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    // Calcul de la différence en jours
+    var diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+
+    // Si la dernière mise à jour remonte à hier
+    if (diffDays === 1) {
+      var confirmed = window.confirm("⚠️ Attention : la dernière mise à jour remonte à hier.\nMerci de remettre à jour les informations.");
+      if (confirmed) {
+        window.location.href = "admin.html";
+        return; // Stop la fonction pour éviter d'afficher l'heure
+      }
+    }
+
+    var diffMs = now - lastChangeTimestamp;
+    var diffMinutes = diffMs / (1000 * 60);
+
+    // Heure au format HH:MM:SS
+    var hours = lastChangeTimestamp.getHours().toString().padStart(2, '0');
+    var minutes = lastChangeTimestamp.getMinutes().toString().padStart(2, '0');
+    var seconds = lastChangeTimestamp.getSeconds().toString().padStart(2, '0');
+    var timeString = `${hours}:${minutes}:${seconds}`;
+
+    // Date au format dd MMM
+    var day = lastChangeTimestamp.getDate().toString().padStart(2, '0');
+    var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var month = monthNames[lastChangeTimestamp.getMonth()];
+    var dateString = `${day} ${month}`;
+
+    // Fusion date + heure
+    var fullString = `${timeString} ${dateString}`;
+
+    var elemHour = document.getElementById('last-change-hour');
+    if(elemHour) {
+      elemHour.textContent = fullString;
+
+      // Reset styles
+      elemHour.classList.remove('red-blink');
+      elemHour.style.color = '';
+
+      if (diffMinutes < 60) {
+        elemHour.style.color = 'limegreen'; // Vert
+      } else if (diffMinutes >= 60 && diffMinutes < 120) {
+        elemHour.style.color = 'orange'; // Orange
+      } else if (diffMinutes >= 120) {
+        elemHour.style.color = 'red'; // Rouge clignotant
+        elemHour.classList.add('red-blink');
+      }
+    }
+  }
+
+  function showClosedRunwaysFirebase(data) {
+    polylines.forEach(p => map.removeLayer(p));
+    crosses.forEach(c => map.removeLayer(c));
+    polylines = [];
+    crosses = [];
+
+    console.log("closedRunwaysData from Firebase:", data);
+    closedRunways.forEach(runway => {
+      let runwayKey = sanitizeKey(runway.name);
+      console.log(`Checking runway: ${runway.name} key: ${runwayKey}, data[runwayKey]:`, data[runwayKey]);
+
+      const isILS = runway.name.startsWith("ILS");
+      const info = data[runwayKey] || {};
+      const comment = info.comment || "Aucun commentaire";
+
+      if (isILS) {
+        const midLat = (runway.coordinates[0][0] + runway.coordinates[1][0]) / 2;
+        const midLng = (runway.coordinates[0][1] + runway.coordinates[1][1]) / 2;
+
+        const labelHtml = info.checked
+          ? `<span style="color: red; font-weight: bold;">${runway.name} (U/S)</span>`
+          : `<span style="color: green; font-weight: bold;">${runway.name} (SVC)</span>`;
+
+        const label = L.marker([midLat, midLng], {
+          icon: L.divIcon({className: 'text-label', html: labelHtml, iconSize: [100, 40]})
+        }).addTo(map);
+
+        label.on('click', () => {
+          L.popup()
+            .setLatLng([midLat, midLng])
+            .setContent(`${runway.name} ${info.checked ? "U/S" : "SVC"}<br>${comment}`)
+            .openOn(map);
+        });
+
+        crosses.push(label);
+      } else {
+        if (info.checked) {
+          const polyline = L.polyline(runway.coordinates, {color: "red", weight: 5}).addTo(map);
+          polyline.on('click', e => {
+            L.popup()
+              .setLatLng(e.latlng)
+              .setContent(`${runway.name} CLSD <br> ${comment}`)
+              .openOn(map);
+          });
+          polylines.push(polyline);
+        }
+      }
+    });
+  }
+
+  function listenClosedRunways() {
+    const ref = database.ref('closedRunways');
+    ref.on('value', snapshot => {
+      closedRunwaysData = snapshot.val() || {};
+      showClosedRunwaysFirebase(closedRunwaysData);
+      lastChangeTimestamp = new Date();
+      updateLastChangeTime();
+    });
+  }
+
+  listenClosedRunways();
+</script>
+
+</body>
+</html>

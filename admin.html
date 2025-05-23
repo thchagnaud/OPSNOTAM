@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Administration des Fermetures</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('Airbus-wallpaper.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: white;
+            display: flex;
+            justify-content: flex-start;
+        }
+        .container {
+            display: flex;
+            max-width: 1200px;
+            width: 100%;
+        }
+        .column {
+            flex: 1;
+            padding: 20px;
+        }
+        h3, h4, h5 {
+            text-align: center;
+            margin: 10px;
+        }
+        h3 {
+            font-size: 25px;
+        }
+        h4 {
+            font-size: 25px;
+        }
+        h5 {
+            font-size: 20px;
+        }
+        label {
+            display: block;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .comment-box {
+            width: 100%;
+            margin-top: 5px;
+            height: 60px;
+            resize: none;
+            display: none;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            color: black;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        #saveChanges {
+            position: fixed;
+            bottom: 20px;
+            right: 170px;
+            background-color: #4CAF50;
+        }
+        #saveChanges:hover {
+            background-color: #45a049;
+        }
+        #resetButton {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #f44336;
+        }
+        #resetButton:hover {
+            background-color: #e53935;
+        }
+        #customModal {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            color: black;
+            border: 2px solid black;
+            padding: 20px;
+            z-index: 1000;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        #customModal button {
+            margin: 10px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #customModal button:hover {
+            background-color: #0056b3;
+        }
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ccc;
+        }
+        th {
+            background-color: transparent;
+            color: white;
+        }
+        .taxiway-columns {
+            display: flex;
+            justify-content: space-between;
+            width: 170%;
+            gap: 0px;
+        }
+        .taxiway-column {
+            flex: 1;
+            min-width: 150px;
+            max-width: 250px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="column" style="width: 300px;"> <!-- Colonne pour Pistes et ILS -->
+            <h3>Pistes & ILS</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Pistes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <label>
+                                <input type="checkbox" class="runway-checkbox" data-name="piste14L32R" onclick="toggleCommentBox(this)"> piste14L32R
+                                <textarea class="comment-box" data-name="piste14L32R" placeholder="Ajouter un commentaire..."></textarea>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label>
+                                <input type="checkbox" class="runway-checkbox" data-name="piste14R32L" onclick="toggleCommentBox(this)"> piste14R32L
+                                <textarea class="comment-box" data-name="piste14R32L" placeholder="Ajouter un commentaire..."></textarea>
+                            </label>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ILS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+          <label>
+            <input type="checkbox" class="runway-checkbox" data-name="ILS 32L" onclick="toggleCommentBox(this)"> ILS 32L
+            <textarea class="comment-box" data-name="ILS 32L" placeholder="Ajouter un commentaire..."></textarea>
+        </label><br>
+        <label>
+            <input type="checkbox" class="runway-checkbox" data-name="ILS 32R" onclick="toggleCommentBox(this)"> ILS 32R
+            <textarea class="comment-box" data-name="ILS 32R" placeholder="Ajouter un commentaire..."></textarea>
+        </label><br>
+        <label>
+            <input type="checkbox" class="runway-checkbox" data-name="ILS 14L" onclick="toggleCommentBox(this)"> ILS 14L
+            <textarea class="comment-box" data-name="ILS 14L" placeholder="Ajouter un commentaire..."></textarea>
+        </label><br>
+        <label>
+            <input type="checkbox" class="runway-checkbox" data-name="ILS 14R" onclick="toggleCommentBox(this)"> ILS 14R
+            <textarea class="comment-box" data-name="ILS 14R" placeholder="Ajouter un commentaire..."></textarea>
+        </label><br>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="column"> <!-- Colonne pour Taxiways -->
+           <h4 style="margin-left: 350px;">TAXIWAYS</h4> <!-- Ajouter une marge à gauche -->
+            <div class="taxiway-columns"> <!-- Flexbox pour les sous-colonnes -->
+                <div class="taxiway-column"> <!-- Sous-colonne SAINT MARTIN -->
+                    <h5>SAINT MARTIN</h5>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>
+  <label>
+    <input type="checkbox" class="runway-checkbox" data-name="S2" onclick="toggleCommentBox(this)"> S2
+    <textarea class="comment-box" data-name="S2" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="S3" onclick="toggleCommentBox(this)"> S3
+    <textarea class="comment-box" data-name="S3" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="S4" onclick="toggleCommentBox(this)"> S4
+    <textarea class="comment-box" data-name="S4" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="S6" onclick="toggleCommentBox(this)"> S6
+    <textarea class="comment-box" data-name="S6" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="S8" onclick="toggleCommentBox(this)"> S8
+    <textarea class="comment-box" data-name="S8" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="S10" onclick="toggleCommentBox(this)"> S10
+    <textarea class="comment-box" data-name="S10" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="S11" onclick="toggleCommentBox(this)"> S11
+    <textarea class="comment-box" data-name="S11" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="S20" onclick="toggleCommentBox(this)"> S20
+    <textarea class="comment-box" data-name="S20" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="S30" onclick="toggleCommentBox(this)"> S30
+    <textarea class="comment-box" data-name="S30" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="S32" onclick="toggleCommentBox(this)"> S32
+    <textarea class="comment-box" data-name="S32" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="S35" onclick="toggleCommentBox(this)"> S35
+    <textarea class="comment-box" data-name="S35" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="S40" onclick="toggleCommentBox(this)"> S40
+    <textarea class="comment-box" data-name="S40" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="S50" onclick="toggleCommentBox(this)"> S50
+    <textarea class="comment-box" data-name="S50" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="S60" onclick="toggleCommentBox(this)"> S60
+    <textarea class="comment-box" data-name="S60" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="S90" onclick="toggleCommentBox(this)"> S90
+    <textarea class="comment-box" data-name="S90" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="Z1" onclick="toggleCommentBox(this)"> Z1
+    <textarea class="comment-box" data-name="Z1" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="Z2" onclick="toggleCommentBox(this)"> Z2
+    <textarea class="comment-box" data-name="Z2" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="Z3" onclick="toggleCommentBox(this)"> Z3
+    <textarea class="comment-box" data-name="Z3" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="Z4" onclick="toggleCommentBox(this)"> Z4
+    <textarea class="comment-box" data-name="Z4" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="Z5" onclick="toggleCommentBox(this)"> Z5
+    <textarea class="comment-box" data-name="Z5" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="Z6" onclick="toggleCommentBox(this)"> Z6
+    <textarea class="comment-box" data-name="Z6" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="Z7" onclick="toggleCommentBox(this)"> Z7
+    <textarea class="comment-box" data-name="Z7" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="Z8" onclick="toggleCommentBox(this)"> Z8
+    <textarea class="comment-box" data-name="Z8" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="Z9" onclick="toggleCommentBox(this)"> Z9
+    <textarea class="comment-box" data-name="Z9" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="taxiway-column"> <!-- Sous-colonne C.ADER -->
+                    <h5>C.ADER</h5>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>
+  <label>
+            <input type="checkbox" class="runway-checkbox" data-name="Y30" onclick="toggleCommentBox(this)" onclick="toggleCommentBox(this)"> Y30
+            <textarea class="comment-box" data-name="Y30" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+        </label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="Y35" onclick="toggleCommentBox(this)"> Y35
+    <textarea class="comment-box" data-name="Y35" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="Y40" onclick="toggleCommentBox(this)"> Y40
+    <textarea class="comment-box" data-name="Y40" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="Y50" onclick="toggleCommentBox(this)"> Y50
+    <textarea class="comment-box" data-name="Y50" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="Y60" onclick="toggleCommentBox(this)"> Y60
+    <textarea class="comment-box" data-name="Y60" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="taxiway-column"> <!-- Sous-colonne JLL -->
+                    <h5>JLL</h5>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <label>
+  <label>
+    <input type="checkbox" class="runway-checkbox" data-name="J1" onclick="toggleCommentBox(this)"> J1
+    <textarea class="comment-box" data-name="J1" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="J2" onclick="toggleCommentBox(this)"> J2
+    <textarea class="comment-box" data-name="J2" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="J3" onclick="toggleCommentBox(this)"> J3
+    <textarea class="comment-box" data-name="J3" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="J4" onclick="toggleCommentBox(this)"> J4
+    <textarea class="comment-box" data-name="J4" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="J5" onclick="toggleCommentBox(this)"> J5
+    <textarea class="comment-box" data-name="J5" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="L1" onclick="toggleCommentBox(this)"> L1
+    <textarea class="comment-box" data-name="L1" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="L2" onclick="toggleCommentBox(this)"> L2
+    <textarea class="comment-box" data-name="L2" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="taxiway-column"> <!-- Sous-colonne W -->
+                    <h5>W</h5>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>
+  <label>
+    <input type="checkbox" class="runway-checkbox" data-name="W20" onclick="toggleCommentBox(this)"> W20
+    <textarea class="comment-box" data-name="W20" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="W30" onclick="toggleCommentBox(this)"> W30
+    <textarea class="comment-box" data-name="W30" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="W35" onclick="toggleCommentBox(this)"> W35
+    <textarea class="comment-box" data-name="W35" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="W40" onclick="toggleCommentBox(this)"> W40
+    <textarea class="comment-box" data-name="W40" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="W50" onclick="toggleCommentBox(this)"> W50
+    <textarea class="comment-box" data-name="W50" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="W60" onclick="toggleCommentBox(this)"> W60
+    <textarea class="comment-box" data-name="W60" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="W80" onclick="toggleCommentBox(this)"> W80
+    <textarea class="comment-box" data-name="W80" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="W90" onclick="toggleCommentBox(this)"> W90
+    <textarea class="comment-box" data-name="W90" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="W100" onclick="toggleCommentBox(this)"> W100
+    <textarea class="comment-box" data-name="W100" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="taxiway-column"> <!-- Sous-colonne AIRPORT SIDE -->
+                    <h5>AIRPORT SIDE</h5>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>
+  <label>
+    <input type="checkbox" class="runway-checkbox" data-name="M2" onclick="toggleCommentBox(this)"> M2
+    <textarea class="comment-box" data-name="M2" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="M4" onclick="toggleCommentBox(this)"> M4
+    <textarea class="comment-box" data-name="M4" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="M8" onclick="toggleCommentBox(this)"> M8
+    <textarea class="comment-box" data-name="M8" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="M10" onclick="toggleCommentBox(this)"> M10
+    <textarea class="comment-box" data-name="M10" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="M11" onclick="toggleCommentBox(this)"> M11
+    <textarea class="comment-box" data-name="M11" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="N1" onclick="toggleCommentBox(this)"> N1
+    <textarea class="comment-box" data-name="N1" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="N2" onclick="toggleCommentBox(this)"> N2
+    <textarea class="comment-box" data-name="N2" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="N4" onclick="toggleCommentBox(this)"> N4
+    <textarea class="comment-box" data-name="N4" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="N6" onclick="toggleCommentBox(this)"> N6
+    <textarea class="comment-box" data-name="N6" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="N8" onclick="toggleCommentBox(this)"> N8
+    <textarea class="comment-box" data-name="N8" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="P10" onclick="toggleCommentBox(this)"> P10
+    <textarea class="comment-box" data-name="P10" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="P20" onclick="toggleCommentBox(this)"> P20
+    <textarea class="comment-box" data-name="P20" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="P40" onclick="toggleCommentBox(this)"> P40
+    <textarea class="comment-box" data-name="P40" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="P50" onclick="toggleCommentBox(this)"> P50
+    <textarea class="comment-box" data-name="P50" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="P55" onclick="toggleCommentBox(this)"> P55
+    <textarea class="comment-box" data-name="P55" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="P60" onclick="toggleCommentBox(this)"> P60
+    <textarea class="comment-box" data-name="P60" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="P65" onclick="toggleCommentBox(this)"> P65
+    <textarea class="comment-box" data-name="P65" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="P70" onclick="toggleCommentBox(this)"> P70
+    <textarea class="comment-box" data-name="P70" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="P90" onclick="toggleCommentBox(this)"> P90
+    <textarea class="comment-box" data-name="P90" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="P100" onclick="toggleCommentBox(this)"> P100
+    <textarea class="comment-box" data-name="P100" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="P101" onclick="toggleCommentBox(this)"> P101
+    <textarea class="comment-box" data-name="P101" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="T10" onclick="toggleCommentBox(this)"> T10
+    <textarea class="comment-box" data-name="T10" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="T11" onclick="toggleCommentBox(this)"> T11
+    <textarea class="comment-box" data-name="T11" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="T12" onclick="toggleCommentBox(this)"> T12
+    <textarea class="comment-box" data-name="T12" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="T50" onclick="toggleCommentBox(this)"> T50
+    <textarea class="comment-box" data-name="T50" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="T55" onclick="toggleCommentBox(this)"> T55
+    <textarea class="comment-box" data-name="T55" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="T60" onclick="toggleCommentBox(this)"> T60
+    <textarea class="comment-box" data-name="T60" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="T65" onclick="toggleCommentBox(this)"> T65
+    <textarea class="comment-box" data-name="T65" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="T70" onclick="toggleCommentBox(this)"> T70
+    <textarea class="comment-box" data-name="T70" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="T100" onclick="toggleCommentBox(this)"> T100
+    <textarea class="comment-box" data-name="T100" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+<label>
+    <input type="checkbox" class="runway-checkbox" data-name="T101" onclick="toggleCommentBox(this)"> T101
+    <textarea class="comment-box" data-name="T101" placeholder="Ajouter un commentaire..." onclick="toggleCommentBox(this)"></textarea>
+</label><br>
+
+<button id="resetButton">Remise à zéro</button>
+<button id="saveChanges">Sauvegarder les changements</button>
+
+<div id="overlay"></div>
+<div id="customModal">
+    <p class="black-text">
+        <img src="https://www.gif-maniac.com/gifs/40/40439.gif" style="vertical-align:middle;"> 
+        Les <strong style="color:red;">AUTOLANDS</strong> sont certainement à prévoir ailleurs. Êtes-vous sûr de vouloir sauvegarder les changements ?
+    </p>
+    <button id="confirmBtn">Oui</button>
+    <button id="cancelBtn">Non</button>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+
+  // Config Firebase (vérifie que c’est bien la tienne)
+  const firebaseConfig = {
+    apiKey: "AIzaSyDHagkSUwNm6wDoyWuH633Yo7HXWxnsqQg",
+    authDomain: "notamops.firebaseapp.com",
+    databaseURL: "https://notamops-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "notamops",
+    storageBucket: "notamops.firebasestorage.app",
+    messagingSenderId: "1022666701705",
+    appId: "1:1022666701705:web:f11a044ae64ceb5f77bf58"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const closedRunwaysRef = ref(db, 'closedRunways');
+
+  // Nettoyage clé Firebase (pas de ".", "#", "$", "/", "[", "]")
+  function sanitizeKey(key) {
+    return key.toLowerCase()
+              .replace(/[.#$\[\]]/g, '_')
+              .replace(/\//g, '_')
+              .replace(/\s+/g, '');
+  }
+
+  // Toggle affichage zone commentaire
+  window.toggleCommentBox = function(checkbox) {
+    const commentBox = checkbox.nextElementSibling;
+    if (checkbox.checked) {
+      commentBox.style.display = "block";
+    } else {
+      commentBox.style.display = "none";
+      commentBox.value = "";
+    }
+  };
+
+  // Reset formulaire
+  function resetForm() {
+    document.querySelectorAll('.runway-checkbox').forEach(cb => {
+      cb.checked = false;
+      toggleCommentBox(cb);
+    });
+  }
+
+  // Chargement données Firebase à l'ouverture
+  onValue(closedRunwaysRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      document.querySelectorAll('.runway-checkbox').forEach(checkbox => {
+        const key = sanitizeKey(checkbox.getAttribute('data-name'));
+        if (data[key]) {
+          checkbox.checked = data[key].checked;
+          const textarea = document.querySelector(`textarea[data-name="${checkbox.getAttribute('data-name')}"]`);
+          if (textarea) {
+            textarea.value = data[key].comment || "";
+          }
+          toggleCommentBox(checkbox);
+        } else {
+          checkbox.checked = false;
+          const textarea = document.querySelector(`textarea[data-name="${checkbox.getAttribute('data-name')}"]`);
+          if (textarea) {
+            textarea.value = "";
+          }
+          toggleCommentBox(checkbox);
+        }
+      });
+    } else {
+      resetForm();
+    }
+  });
+
+  // Sauvegarde vers Firebase
+  function saveToFirebase() {
+    const closedRunwaysData = {};
+    document.querySelectorAll('.runway-checkbox').forEach(checkbox => {
+      const key = sanitizeKey(checkbox.getAttribute('data-name'));
+      const textarea = document.querySelector(`textarea[data-name="${checkbox.getAttribute('data-name')}"]`);
+      closedRunwaysData[key] = {
+        checked: checkbox.checked,
+        comment: textarea ? textarea.value : ""
+      };
+    });
+
+    set(closedRunwaysRef, closedRunwaysData)
+      .then(() => alert("Changements sauvegardés avec succès !"))
+      .catch(err => alert("Erreur de sauvegarde : " + err.message));
+  }
+
+  // Évènements boutons
+  document.getElementById('resetButton').addEventListener('click', resetForm);
+  document.getElementById('saveChanges').addEventListener('click', saveToFirebase);
+
+</script>
+
+</body>
+</html>
